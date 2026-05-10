@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id          Int            @id @default(autoincrement())
+  nome        String
+  email       String         @unique
+  senha       String
+  departamento String
+  curso       String
+  avaliacoes  Avaliacoes[]
+  comentarios Comentarios[]
+  notificacoes Notificacoes[]
+  fotosrc     String?
+}
+
+model Professores {
+  id          Int            @id @default(autoincrement())
+  nome        String         @unique
+  materias    Materias[]
+  departamento String
+  avaliacoes  Avaliacoes[]
+  fotosrc     String?
+}
+
+model Avaliacoes {
+  id          Int            @id @default(autoincrement())
+  avaliacao   String
+  materia     String
+  user        Users          @relation(fields: [userId], references: [id])
+  userId      Int
+  prof        Professores    @relation(fields: [profId], references: [id])
+  profId      Int
+  data        DateTime       @default(now())
+  comentarios Comentarios[]
+}
+
+model Comentarios {
+  id          Int            @id @default(autoincrement())
+  usersId     Int
+  conteudo    String
+  avaliacaoId Int
+  data        DateTime       @default(now())
+  user        Users          @relation(fields: [usersId], references: [id])
+  avaliacao   Avaliacoes     @relation(fields: [avaliacaoId], references: [id])
+}
+
+model Materias {
+  id     Int            @id @default(autoincrement())
+  nome   String
+  prof   Professores[]
+}
+
+model Notificacoes {
+  id       Int            @id @default(autoincrement())
+  usersId  Int
+  texto    String
+  link     String?
+  lida     Boolean        @default(false)
+  tipo     NotificacaoTipo
+  data     DateTime       @default(now())
+  user     Users          @relation(fields: [usersId], references: [id])
+}
+
+enum NotificacaoTipo {
+  NOVO_COMENTARIO
+  NOVO_PROFESSOR
+}
