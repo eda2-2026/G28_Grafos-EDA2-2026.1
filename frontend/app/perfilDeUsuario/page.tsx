@@ -8,6 +8,7 @@ import { FaArrowLeft, FaEnvelope, FaBuilding } from "react-icons/fa";
 import ModalEditarPerfil from "../components/m_editar_perfil/M_Editar_Perfil";
 import { jwtDecode } from "jwt-decode";
 import { useAuth } from "../contexts/AuthContext";
+import { mergeSort } from "../utils/sortingAlgorithms";
 
 const PerfilDeUsuario = () => {
   const router = useRouter();
@@ -43,12 +44,12 @@ const PerfilDeUsuario = () => {
         })
       );
 
-      avaliacoesComProfessor.sort(
-        (a, b) =>
-          new Date(b.data).getTime() - new Date(a.data).getTime()
+      const avaliacoesOrdenadas = mergeSort(
+        avaliacoesComProfessor,
+        (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()
       );
-
-      setAvaliacoes(avaliacoesComProfessor);
+      
+      setAvaliacoes(avaliacoesOrdenadas);
     } catch (error) {
       console.error("Erro ao carregar dados do perfil:", error);
     } finally {

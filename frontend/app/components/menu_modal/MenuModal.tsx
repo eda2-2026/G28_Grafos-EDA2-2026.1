@@ -4,6 +4,7 @@ import { Bold, Italic } from 'lucide-react';
 import { postAvaliacao, getAllProf } from '@/app/utils/api';
 import { jwtDecode } from 'jwt-decode';
 import Botão from '../botao_azul/Botao_Azul';
+import { insertionSort } from '@/app/utils/sortingAlgorithms';
 
 const execCommand = (command: string, value?: string) => {
   document.execCommand(command, false, value);
@@ -48,12 +49,17 @@ const MenuModal: React.FC<MenuModalProps> = ({ isOpen, onClose, onEnviarAvaliaca
     if (isOpen) {
       getAllProf()
         .then((res) => {
-          const sortedProf = res.sort((a: Professor, b: Professor) =>
-            a.nome.localeCompare(b.nome)
-          );
-          sortedProf.forEach((prof: Professor) => {
-            prof.materias.sort((a, b) => a.nome.localeCompare(b.nome));
-          });
+          const sortedProf = insertionSort(
+            res,
+            (a: Professor, b: Professor) => a.nome.localeCompare(b.nome)
+          ).map((prof: Professor) => ({
+            ...prof,
+            materias: insertionSort(
+              prof.materias,
+              (a, b) => a.nome.localeCompare(b.nome)
+            ),
+          }));
+          
           setProfessores(sortedProf);
         })
         .catch((err) => console.error("Erro ao buscar professores:", err));
