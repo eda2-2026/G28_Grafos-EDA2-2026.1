@@ -13,7 +13,7 @@ A tecnologia utilizada no Fui Com A Cara foi majoritariamente **TypeScript**.
 
 ## Vídeo de Apresentação
 
-[Link](link-TODO)
+[Link da Apresentação](https://youtu.be/BPr0u9BKb3c)
 
 ## Como rodar o projeto 
 
