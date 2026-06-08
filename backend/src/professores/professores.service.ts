@@ -1,8 +1,8 @@
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from '../database/prisma.service';
 import { Injectable } from '@nestjs/common';
 import { ProfessoresDto } from './dto/professores.dto';
 import { ProfessoresDtoUpdate } from './dto/update-professores.dto';
-import { AvlTree } from 'src/shared/sorting/trees/avl-tree';
+import { AvlTree } from '../shared/sorting/trees/avl-tree';
 
 @Injectable()
 export class ProfessoresService {
@@ -31,15 +31,18 @@ export class ProfessoresService {
     this.treeLoaded = true;
   }
 
+  private async rebuildProfessorTree() {
+    this.treeLoaded = false;
+    await this.loadProfessorTree();
+  }
+
   async create(data: ProfessoresDto) {
     const professor = await this.prisma.professores.create({
       data,
       include: { avaliacoes: true, materias: true },
     });
 
-    if (this.treeLoaded) {
-      this.professorTree.insert(this.normalize(professor.nome), professor);
-    }
+    await this.rebuildProfessorTree();
 
     return professor;
   }
@@ -113,9 +116,7 @@ export class ProfessoresService {
       where: { id },
     });
 
-    if (this.treeLoaded) {
-      this.professorTree.remove(this.normalize(professorExists.nome));
-    }
+    await this.rebuildProfessorTree();
 
     return deletedProfessor;
   }
@@ -149,13 +150,7 @@ export class ProfessoresService {
       include: { avaliacoes: true, materias: true },
     });
 
-    if (this.treeLoaded) {
-      this.professorTree.remove(this.normalize(professorExists.nome));
-      this.professorTree.insert(
-        this.normalize(updateProfessores.nome),
-        updateProfessores,
-      );
-    }
+    await this.rebuildProfessorTree();
 
     return updateProfessores;
   }
