@@ -195,15 +195,17 @@ const Home = () => {
 
   return (
     <>
-      <div className="flex justify-end px-10 pr-23 mt-4">
-        <BarraPes
-          onSearch={handleSearch}
-          sugestoes={professores.map((p) => ({
-            nome: p.nome,
-            departamento: p.departamento,
-          }))}
-        />
-      </div>
+      
+
+        <div className="flex justify-end pr-23 mt-4">
+          <BarraPes
+            onSearch={handleSearch}
+            sugestoes={professores.map((p) => ({
+              nome: p.nome,
+              departamento: p.departamento,
+            }))}
+          />
+        </div>
 
       {filtro.length < professores.length ? (
         <section className="px-10 py-6">

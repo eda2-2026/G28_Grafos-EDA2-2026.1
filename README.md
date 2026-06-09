@@ -1,8 +1,8 @@
-# Ordenação - Fui Com a Cara
+# Árvores - Fui Com a Cara
 
-Esse repositório tem como objetivo aplicar conceitos de **árvores eficientes** em um sistema de avaliação de professores como trabalho 3 da disciplina de Estruturas de Dados 2 da Universidade de Brasília, no semestre 26.1.  
+Esse repositório documenta a aplicação de **estruturas de árvores** em um sistema de avaliação de professores, desenvolvido como trabalho 3 da disciplina de Estruturas de Dados 2 da Universidade de Brasília, no semestre 26.1.
 
-A tecnologia utilizada no Fui Com A Cara foi majoritariamente **TypeScript**. 
+A proposta do trabalho foi usar uma base já existente e aplicar uma estrutura de dados que trouxesse ganho real em busca e organização. No nosso caso, a equipe escolheu dividir a implementação entre backend e frontend, usando **TypeScript** como tecnologia principal.
 
 ## Alunas
 
@@ -14,6 +14,64 @@ A tecnologia utilizada no Fui Com A Cara foi majoritariamente **TypeScript**.
 ## Vídeo de Apresentação
 
 [Link da Apresentação]()
+
+## Objetivo 
+
+O objetivo foi aplicar árvores em um projeto funcional já existente para melhorar a performance de consultas e tornar a justificativa da disciplina mais concreta. Em vez de usar árvores apenas como exercício isolado, o trabalho foi encaixado em fluxos reais do sistema:
+
+- busca de professores por nome e departamento na interface;
+- exibição de sugestões de pesquisa;
+- comparação de desempenho no benchmark;
+
+## Estruturas e ideia central
+
+Escolhemos trabalhar com uma estrutura de árvore balanceada no backend e com uma Trie no frontend para as consultas por prefixo.
+
+### Por que árvore balanceada
+
+A árvore balanceada foi pensada para os fluxos de cadastro e manutenção de professores, porque essas operações exigem inserção, remoção e busca com custo previsível. Em estruturas desse tipo, a ideia é evitar que a árvore fique desbalanceada e perca performance com o crescimento da base.
+
+### Por que Trie na interface
+
+A Trie foi aplicada nas buscas por prefixo da home e no benchmark porque esse tipo de estrutura é muito adequada para sugestões instantâneas e consultas textuais repetidas. Ela combina bem com o comportamento da busca do usuário, que normalmente digita parte do nome ou do departamento.
+
+### O que isso melhora
+
+- reduz o custo de buscas repetidas;
+- evita varrer listas inteiras a cada tecla digitada;
+- deixa a interface mais responsiva para sugestões;
+- fortalece a comparação teórica e prática para a disciplina.
+
+## O que foi aplicado
+
+### Home
+
+A página principal passou a trabalhar com árvore indexada. Além disso, a barra de pesquisa foi ajustada para usar estrutura de prefixo nas sugestões, tornando a navegação mais coerente com a proposta do trabalho.
+
+Arquivos relacionados:
+
+- `frontend/app/page.tsx`
+- `frontend/app/components/pesquisa/pesquisa.tsx`
+- `frontend/app/utils/trie.ts`
+
+### Benchmark
+
+A página de benchmark foi transformada em uma demonstração direta da Trie, com foco em tempo total de consultas, tempo médio e amostra de prefixo pesquisado. Isso tornou a comparação mais alinhada ao objetivo da disciplina.
+
+Arquivos relacionados:
+
+- `frontend/app/benchmark/page.tsx`
+- `frontend/app/utils/trie.ts`
+
+### Backend
+
+Escolhemos usar uma árvore balanceada no backend para suportar o fluxo de professores. A justificativa é de preservar boa performance nas operações de manutenção da base e manter a estrutura preparada para crescer sem perder eficiência.
+
+Arquivos relacionados:
+
+- `backend/src/professores/professores.service.ts`
+- `backend/src/professores/professores.controller.ts`
+- `backend/src/shared/trees/*`
 
 ## Como rodar o projeto 
 

@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { BiSearch } from "react-icons/bi";
+import Trie from "../../utils/trie";
 
 interface Sugestao {
   nome: string;
@@ -16,6 +17,30 @@ const BarraPes: React.FC<BarraPesProps> = ({ onSearch, sugestoes }) => {
   const [mostrarSugestoes, setMostrarSugestoes] = React.useState(true);
   const [modoBusca, setModoBusca] = React.useState<"nome" | "departamento">("nome");
 
+  const nameTrie = useMemo(() => {
+    const trie = new Trie();
+    sugestoes.forEach((sugestao, index) => {
+      trie.insert(sugestao.nome, {
+        id: index,
+        nome: sugestao.nome,
+        departamento: sugestao.departamento,
+      });
+    });
+    return trie;
+  }, [sugestoes]);
+
+  const deptTrie = useMemo(() => {
+    const trie = new Trie();
+    sugestoes.forEach((sugestao, index) => {
+      trie.insert(sugestao.departamento, {
+        id: index,
+        nome: sugestao.nome,
+        departamento: sugestao.departamento,
+      });
+    });
+    return trie;
+  }, [sugestoes]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearch(value);
@@ -30,13 +55,11 @@ const BarraPes: React.FC<BarraPesProps> = ({ onSearch, sugestoes }) => {
     setMostrarSugestoes(false);
   };
 
-  const sugestoesFiltradas = sugestoes.filter((s) => {
-    if (modoBusca === "nome") {
-      return s.nome.toLowerCase().startsWith(search.toLowerCase()) && search !== "";
-    } else {
-      return s.departamento.toLowerCase().startsWith(search.toLowerCase()) && search !== "";
-    }
-  });
+  const sugestoesFiltradas = search === ""
+    ? []
+    : (modoBusca === "nome"
+      ? nameTrie.searchPrefix(search, 8)
+      : deptTrie.searchPrefix(search, 8));
 
   return (
     <div className="w-full max-w-md px-4 py-5 text-left">
@@ -68,9 +91,9 @@ const BarraPes: React.FC<BarraPesProps> = ({ onSearch, sugestoes }) => {
         />
         {mostrarSugestoes && sugestoesFiltradas.length > 0 && (
           <ul className="absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded-xl shadow-md max-h-60 overflow-y-auto">
-            {sugestoesFiltradas.map((s, index) => (
+            {sugestoesFiltradas.map((s) => (
               <li
-                key={index}
+                key={`${s.id}-${modoBusca}`}
                 onClick={() => handleClickSugestao(s)}
                 className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
               >
