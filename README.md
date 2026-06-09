@@ -73,6 +73,18 @@ Arquivos relacionados:
 - `backend/src/professores/professores.controller.ts`
 - `backend/src/shared/trees/*`
 
+#### `backend/src/shared/trees/avl-tree.ts`
+
+Este arquivo implementa a estrutura de dados **Árvore AVL**, uma árvore binária de busca balanceada. Nele foram desenvolvidas as operações de inserção, remoção, busca por chave exata e busca por prefixo, além dos mecanismos de balanceamento por meio de rotações. A árvore é utilizada para armazenar e organizar os professores pelo nome, permitindo buscas mais eficientes do que uma busca sequencial tradicional.
+
+#### `backend/src/professores/professores.service.ts`
+
+Este arquivo foi adaptado para integrar a árvore AVL ao gerenciamento de professores. Foi criada uma instância da árvore para armazenar os professores em memória, além de métodos para carregar e reconstruir a estrutura quando necessário. Também foram implementadas buscas utilizando a AVL, buscas sequenciais para comparação e um benchmark que mede o desempenho das duas abordagens. A árvore é mantida sincronizada sempre que um professor é criado, atualizado ou removido.
+
+#### `backend/src/professores/professores.controller.ts`
+
+Este arquivo foi modificado para disponibilizar novas rotas relacionadas à busca de professores. Foram adicionados endpoints para realizar buscas utilizando a árvore AVL, buscas sequenciais e comparações de desempenho entre os dois métodos. Essas rotas permitem que o frontend e as ferramentas de teste acessem diretamente os resultados e evidenciem os ganhos obtidos com a utilização da árvore AVL.
+
 ## Como rodar o projeto 
 
 ### Pré-requisitos
