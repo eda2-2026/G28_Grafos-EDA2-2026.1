@@ -18,6 +18,7 @@ import { AvaliacoesService } from './avaliacoes/avaliacoes.service';
 import { MateriasModule } from './materias/materias.module';
 import { NotificacoesModule } from './notificacoes/notificacoes.module';
 import { ComentariosModule } from './comentarios/comentarios.module';
+import { GraphModule } from './shared/graph';
 
 // --- ADIÇÕES NECESSÁRIAS ---
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -42,6 +43,7 @@ import { join } from 'path';
     AvaliacoesModule,
     MateriasModule,
     NotificacoesModule,
+    GraphModule,
   ],
   controllers: [
     UsersController,
