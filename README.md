@@ -8,7 +8,7 @@ A proposta do trabalho foi usar uma base já existente e aplicar uma estrutura d
 
 | Matrícula | Nome |
 | -- | -- |
-| 231026840  | Laryssa Felix Ribeiro Lopes |
+| 231026840  | Laryssa Felix Lopes |
 | 231035731 |  Mayara Marques Silva |
 
 ## Vídeo de Apresentação
