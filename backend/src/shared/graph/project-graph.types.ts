@@ -37,3 +37,48 @@ export interface GraphSnapshot {
   nodes: GraphNode[];
   edges: GraphEdge[];
 }
+
+export interface BfsOptions {
+  /** Distância máxima (em arestas) a ser explorada a partir da origem. */
+  maxDepth?: number;
+  /** Se informado, somente arestas desses tipos são percorridas. */
+  relationKinds?: GraphRelationKind[];
+}
+
+export interface BfsVisit {
+  nodeId: string;
+  /** Número de arestas percorridas da origem até este nó. */
+  distance: number;
+}
+
+export interface RankingWeights {
+  sharedMatter: number;
+  sharedDepartment: number;
+  evaluation: number;
+  comment: number;
+}
+
+export interface RecommendationOptions {
+  /** Profundidade da BFS de professores. Padrão: 1 (apenas vizinhos diretos). */
+  maxDepth?: number;
+  /** Quantidade máxima de recomendações retornadas. */
+  limit?: number;
+  /** Sobrescreve os pesos padrão usados no ranking. */
+  weights?: Partial<RankingWeights>;
+}
+
+export interface ProfessorScoreBreakdown {
+  sharedMatters: number;
+  sharedDepartments: number;
+  evaluations: number;
+  comments: number;
+}
+
+export interface RankedProfessor {
+  professorId: number;
+  nodeId: string;
+  nome: string;
+  distance: number;
+  score: number;
+  breakdown: ProfessorScoreBreakdown;
+}

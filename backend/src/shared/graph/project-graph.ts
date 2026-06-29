@@ -1,4 +1,6 @@
 import {
+  BfsOptions,
+  BfsVisit,
   GraphEdge,
   GraphNode,
   GraphNodeKind,
@@ -78,6 +80,56 @@ export class ProjectGraph {
     return outgoingEdges
       .map((edge) => this.nodes.get(edge.to))
       .filter((node): node is GraphNode => Boolean(node));
+  }
+
+  /**
+   * Busca em largura (BFS) a partir de `startId`.
+   *
+   * Visita os nós em ordem crescente de distância (número de arestas) e
+   * retorna cada nó alcançado junto com essa distância. A travessia pode ser
+   * limitada por profundidade (`maxDepth`) e restrita a determinados tipos de
+   * relação (`relationKinds`), o que permite, por exemplo, navegar apenas pelas
+   * arestas de afinidade entre professores.
+   */
+  bfs(startId: string, options: BfsOptions = {}): BfsVisit[] {
+    const { maxDepth = Infinity, relationKinds } = options;
+
+    if (!this.nodes.has(startId)) {
+      return [];
+    }
+
+    const allowedKinds = relationKinds ? new Set(relationKinds) : null;
+    const visited = new Set<string>([startId]);
+    const order: BfsVisit[] = [];
+    const queue: BfsVisit[] = [{ nodeId: startId, distance: 0 }];
+
+    // Índice de leitura da fila: evita o custo O(n) de Array.shift() a cada nó.
+    let head = 0;
+
+    while (head < queue.length) {
+      const current = queue[head];
+      head += 1;
+      order.push(current);
+
+      if (current.distance >= maxDepth) {
+        continue;
+      }
+
+      for (const edge of this.getOutgoingEdges(current.nodeId)) {
+        if (allowedKinds && !allowedKinds.has(edge.kind)) {
+          continue;
+        }
+
+        if (visited.has(edge.to)) {
+          continue;
+        }
+
+        visited.add(edge.to);
+        queue.push({ nodeId: edge.to, distance: current.distance + 1 });
+      }
+    }
+
+    return order;
   }
 
   toJSON(): GraphSnapshot {
