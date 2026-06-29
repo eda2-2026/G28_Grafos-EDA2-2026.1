@@ -1,9 +1,16 @@
 "use client";
 import React, { useEffect, useState, useCallback } from "react";
 import NavBar from "../components/navbar/NavBar";
-import { FaBuilding, FaBook, FaArrowLeft } from "react-icons/fa";
+import { FaBuilding, FaBook, FaArrowLeft, FaProjectDiagram } from "react-icons/fa";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getOneProf, getAvaliacoesByProf, getOneUser, profileImageLoader } from "../utils/api";
+import {
+  getOneProf,
+  getAvaliacoesByProf,
+  getOneUser,
+  getProfessorNetwork,
+  profileImageLoader,
+  type ProfessorNetwork,
+} from "../utils/api";
 import PostCard from "../components/post_card/PostCard";
 
 function stableMergeSort<T>(array: T[], compare: (a: T, b: T) => number): T[] {
@@ -53,17 +60,20 @@ const PerfilDeProfessor = () => {
 
   const [professor, setProfessor] = useState<any>(null);
   const [avaliacoes, setAvaliacoes] = useState<any[]>([]);
+  const [redeProfessor, setRedeProfessor] = useState<ProfessorNetwork | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     if (!profId) return;
 
     try {
-      const [profData, avaliacoesData] = await Promise.all([
+      const [profData, avaliacoesData, redeData] = await Promise.all([
         getOneProf(Number(profId)),
         getAvaliacoesByProf(Number(profId)),
+        getProfessorNetwork(Number(profId)),
       ]);
       setProfessor(profData);
+      setRedeProfessor(redeData);
 
       const avaliacoesComUsuario = await Promise.all(
         avaliacoesData.map(async (avaliacao: any) => {
@@ -158,6 +168,45 @@ const PerfilDeProfessor = () => {
                     ? professor.materias.map((m: { nome: string }) => m.nome).join(", ")
                     : "Matérias não informadas"}
                 </p>
+
+                <hr className="my-6 border-[#595652]" />
+
+                <section className="pb-6">
+                  <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
+                    <FaProjectDiagram className="text-[#222E50]" />
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      Rede de professores
+                    </h3>
+                  </div>
+
+                  {redeProfessor?.recomendacoes?.length ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {redeProfessor.recomendacoes.map((recomendacao) => (
+                        <button
+                          key={recomendacao.nodeId}
+                          type="button"
+                          onClick={() => router.push(`/perfilDeProfessor?id=${recomendacao.professorId}`)}
+                          className="text-left border border-[#D8D8D8] rounded-lg p-3 bg-[#F8F8F8] hover:bg-yellow-50 hover:border-yellow-300 transition"
+                        >
+                          <span className="block text-sm font-semibold text-[#222E50]">
+                            {recomendacao.nome}
+                          </span>
+                          <span className="block text-xs text-gray-600 mt-1">
+                            Pontuação {recomendacao.score.toFixed(1)}
+                          </span>
+                          <span className="block text-xs text-gray-500 mt-2">
+                            {recomendacao.breakdown.sharedMatters} matéria(s) e{" "}
+                            {recomendacao.breakdown.sharedDepartments} departamento(s) em comum
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-600 text-center md:text-left">
+                      Nenhum professor relacionado encontrado.
+                    </p>
+                  )}
+                </section>
 
                 <hr className="my-6 border-[#595652]" />
 

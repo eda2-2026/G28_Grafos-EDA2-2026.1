@@ -35,6 +35,41 @@ export const getOneProf = async (id: number) => {
   return response.data;
 };
 
+export type ProfessorRecommendation = {
+  professorId: number;
+  nodeId: string;
+  nome: string;
+  distance: number;
+  score: number;
+  breakdown: {
+    sharedMatters: number;
+    sharedDepartments: number;
+    evaluations: number;
+    comments: number;
+  };
+};
+
+export type ProfessorNetwork = {
+  professorId: number;
+  professor: {
+    id: string;
+    kind: string;
+    label: string;
+  } | null;
+  conexoesDiretas: Array<{
+    from: string;
+    to: string;
+    kind: string;
+    weight: number;
+  }>;
+  recomendacoes: ProfessorRecommendation[];
+};
+
+export const getProfessorNetwork = async (id: number): Promise<ProfessorNetwork> => {
+  const response = await api.get(`/graph/professores/${id}/rede?limit=4`);
+  return response.data;
+};
+
 export const getAvaliacoesByUser = async (userId: number) => {
   const response = await api.get("/avaliacoes");
   return response.data.filter((avaliacao: any) => avaliacao.userId === userId);
