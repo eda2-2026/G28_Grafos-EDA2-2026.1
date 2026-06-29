@@ -1,4 +1,5 @@
 export * from './graph.factory';
+export * from './graph.controller';
 export * from './graph.module';
 export * from './graph-recommendation.service';
 export * from './project-graph';
