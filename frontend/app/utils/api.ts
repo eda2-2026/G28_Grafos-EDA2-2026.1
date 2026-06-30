@@ -70,6 +70,28 @@ export const getProfessorNetwork = async (id: number): Promise<ProfessorNetwork>
   return response.data;
 };
 
+export type UserProfessorRecommendation = {
+  professorId: number;
+  nodeId: string;
+  nome: string;
+  score: number;
+  baseadoEm: Array<{
+    professorId: number;
+    nome: string;
+  }>;
+};
+
+export type UserRecommendations = {
+  userId: number;
+  total: number;
+  recomendacoes: UserProfessorRecommendation[];
+};
+
+export const getUserRecommendations = async (id: number): Promise<UserRecommendations> => {
+  const response = await api.get(`/graph/usuarios/${id}/recomendacoes?limit=4`);
+  return response.data;
+};
+
 export const getAvaliacoesByUser = async (userId: number) => {
   const response = await api.get("/avaliacoes");
   return response.data.filter((avaliacao: any) => avaliacao.userId === userId);

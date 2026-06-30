@@ -82,3 +82,22 @@ export interface RankedProfessor {
   score: number;
   breakdown: ProfessorScoreBreakdown;
 }
+
+/** Professor já avaliado pelo usuário que motivou uma recomendação. */
+export interface UserRecommendationSource {
+  professorId: number;
+  nome: string;
+}
+
+/**
+ * Recomendação de professor para um usuário. O `score` é a soma das pontuações
+ * de similaridade vindas de cada professor que o usuário já avaliou, e
+ * `baseadoEm` lista esses professores para tornar a sugestão justificável.
+ */
+export interface UserProfessorRecommendation {
+  professorId: number;
+  nodeId: string;
+  nome: string;
+  score: number;
+  baseadoEm: UserRecommendationSource[];
+}

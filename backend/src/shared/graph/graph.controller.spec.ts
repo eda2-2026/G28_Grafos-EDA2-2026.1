@@ -11,6 +11,7 @@ describe('GraphController', () => {
   beforeEach(() => {
     recommendationService = {
       recommendForProfessor: jest.fn(),
+      recommendForUser: jest.fn(),
       rankSimilarProfessors: jest.fn(),
     } as unknown as jest.Mocked<GraphRecommendationService>;
 
@@ -46,6 +47,30 @@ describe('GraphController', () => {
       recomendacoes,
     });
     expect(recommendationService.recommendForProfessor).toHaveBeenCalledWith(1, {
+      limit: 6,
+      maxDepth: 1,
+    });
+  });
+
+  it('retorna recomendações para o usuário com limite padrão', async () => {
+    const recomendacoes = [
+      {
+        professorId: 2,
+        nodeId: 'professor:2',
+        nome: 'Professora Ada',
+        score: 12,
+        baseadoEm: [{ professorId: 5, nome: 'Professor Alan' }],
+      },
+    ];
+
+    recommendationService.recommendForUser.mockResolvedValue(recomendacoes);
+
+    await expect(controller.getUserRecommendations(1, {})).resolves.toEqual({
+      userId: 1,
+      total: 1,
+      recomendacoes,
+    });
+    expect(recommendationService.recommendForUser).toHaveBeenCalledWith(1, {
       limit: 6,
       maxDepth: 1,
     });

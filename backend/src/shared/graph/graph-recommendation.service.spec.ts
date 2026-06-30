@@ -2,6 +2,7 @@ import {
   makeCommentNodeId,
   makeEvaluationNodeId,
   makeProfessorNodeId,
+  makeUserNodeId,
 } from './graph.factory';
 import { GraphRecommendationService } from './graph-recommendation.service';
 import { ProjectGraph } from './project-graph';
@@ -71,6 +72,43 @@ const addEvaluation = (
       bidirectional: true,
     });
   }
+};
+
+/**
+ * Liga um usuário a um professor por meio de uma avaliação que ele escreveu
+ * (usuário -> avaliação -> professor), criando os nós que ainda não existem.
+ */
+const addUserEvaluation = (
+  graph: ProjectGraph,
+  userId: number,
+  evaluationId: number,
+  professorId: number,
+): void => {
+  const userNodeId = makeUserNodeId(userId);
+  if (!graph.getNode(userNodeId)) {
+    graph.addTypedNode('user', userNodeId, `Usuário ${userId}`, { id: userId });
+  }
+
+  const evaluationNodeId = makeEvaluationNodeId(evaluationId);
+  if (!graph.getNode(evaluationNodeId)) {
+    graph.addTypedNode(
+      'evaluation',
+      evaluationNodeId,
+      `Avaliação ${evaluationId}`,
+      { id: evaluationId },
+    );
+  }
+
+  graph.connect(userNodeId, evaluationNodeId, 'authored', 3, {
+    bidirectional: true,
+  });
+  graph.connect(
+    evaluationNodeId,
+    makeProfessorNodeId(professorId),
+    'about_professor',
+    5,
+    { bidirectional: true },
+  );
 };
 
 /**
@@ -180,6 +218,101 @@ describe('GraphRecommendationService', () => {
       expect(indirect).toBeDefined();
       expect(indirect?.distance).toBe(2);
       expect(indirect?.breakdown.sharedMatters).toBe(0);
+    });
+  });
+
+  describe('rankRecommendationsForUser', () => {
+    it('recomenda professores similares aos que o usuário avaliou', () => {
+      const graph = buildScenario();
+      // Usuário 1 avaliou apenas o professor 10.
+      addUserEvaluation(graph, 1, 200, 10);
+
+      const recomendacoes = service.rankRecommendationsForUser(graph, 1);
+
+      // Mesmo ranking de similares ao professor 10, excluindo o próprio 10.
+      expect(recomendacoes.map((item) => item.professorId)).toEqual([
+        11, 13, 12,
+      ]);
+
+      const [primeiro] = recomendacoes;
+      expect(primeiro.professorId).toBe(11);
+      expect(primeiro.score).toBeCloseTo(8.5);
+      expect(primeiro.baseadoEm).toEqual([
+        { professorId: 10, nome: 'Professor 10' },
+      ]);
+    });
+
+    it('exclui professores que o usuário já avaliou', () => {
+      const graph = buildScenario();
+      addUserEvaluation(graph, 1, 200, 10);
+      addUserEvaluation(graph, 1, 201, 11);
+
+      const recomendacoes = service.rankRecommendationsForUser(graph, 1);
+      const ids = recomendacoes.map((item) => item.professorId);
+
+      expect(ids).not.toContain(10);
+      expect(ids).not.toContain(11);
+    });
+
+    it('soma as pontuações vindas de cada professor avaliado', () => {
+      const graph = buildScenario();
+      // Usuário 1 avaliou 11 e 13; ambos são similares ao professor 10.
+      addUserEvaluation(graph, 1, 200, 11);
+      addUserEvaluation(graph, 1, 201, 13);
+
+      const recomendacoes = service.rankRecommendationsForUser(graph, 1);
+
+      // 10 vem de 11 (score 6) e de 13 (score 8) -> 14, baseado em 2 professores.
+      expect(recomendacoes.map((item) => item.professorId)).toEqual([10]);
+      expect(recomendacoes[0].score).toBeCloseTo(14);
+      expect(recomendacoes[0].baseadoEm).toHaveLength(2);
+    });
+
+    it('respeita o limite de recomendações', () => {
+      const graph = buildScenario();
+      addUserEvaluation(graph, 1, 200, 10);
+
+      const recomendacoes = service.rankRecommendationsForUser(graph, 1, {
+        limit: 2,
+      });
+
+      expect(recomendacoes.map((item) => item.professorId)).toEqual([11, 13]);
+    });
+
+    it('retorna lista vazia para usuário inexistente', () => {
+      expect(service.rankRecommendationsForUser(buildScenario(), 999)).toEqual(
+        [],
+      );
+    });
+
+    it('retorna lista vazia quando o usuário não avaliou ninguém', () => {
+      const graph = buildScenario();
+      graph.addTypedNode('user', makeUserNodeId(1), 'Usuário 1', { id: 1 });
+
+      expect(service.rankRecommendationsForUser(graph, 1)).toEqual([]);
+    });
+  });
+
+  describe('recommendForUser', () => {
+    it('monta o grafo base e recomenda a partir do histórico do usuário', async () => {
+      const graph = buildScenario();
+      addUserEvaluation(graph, 1, 200, 10);
+
+      const buildBaseGraph = jest.fn().mockResolvedValue(graph);
+      const projectGraphService = {
+        buildBaseGraph,
+      } as unknown as ProjectGraphService;
+
+      const recommendation = new GraphRecommendationService(
+        projectGraphService,
+      );
+      const recomendacoes = await recommendation.recommendForUser(1, {
+        limit: 1,
+      });
+
+      expect(buildBaseGraph).toHaveBeenCalledTimes(1);
+      expect(recomendacoes).toHaveLength(1);
+      expect(recomendacoes[0].professorId).toBe(11);
     });
   });
 

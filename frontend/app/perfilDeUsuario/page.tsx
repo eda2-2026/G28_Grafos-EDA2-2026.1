@@ -3,8 +3,15 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import NavBar from "../components/navbar/NavBar";
 import PostCard from "../components/post_card/PostCard";
-import { getOneUser, getAvaliacoesByUser, getOneProf, profileImageLoader } from "../utils/api";
-import { FaArrowLeft, FaEnvelope, FaBuilding } from "react-icons/fa";
+import {
+  getOneUser,
+  getAvaliacoesByUser,
+  getOneProf,
+  getUserRecommendations,
+  profileImageLoader,
+  type UserProfessorRecommendation,
+} from "../utils/api";
+import { FaArrowLeft, FaEnvelope, FaBuilding, FaProjectDiagram } from "react-icons/fa";
 import ModalEditarPerfil from "../components/m_editar_perfil/M_Editar_Perfil";
 import { jwtDecode } from "jwt-decode";
 import { useAuth } from "../contexts/AuthContext";
@@ -22,9 +29,16 @@ const PerfilDeUsuario = () => {
   const [avaliacoes, setAvaliacoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [recomendacoes, setRecomendacoes] = useState<UserProfessorRecommendation[]>([]);
+  const [recomendacoesLoading, setRecomendacoesLoading] = useState(false);
+  const [recomendacoesError, setRecomendacoesError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!userId) return;
+
+    setRecomendacoesLoading(true);
+    setRecomendacoesError(null);
+    setRecomendacoes([]);
 
     try {
       const [userData, avaliacoesData] = await Promise.all([
@@ -54,6 +68,18 @@ const PerfilDeUsuario = () => {
       console.error("Erro ao carregar dados do perfil:", error);
     } finally {
       setLoading(false);
+    }
+
+    try {
+      const recomendacoesData = await getUserRecommendations(Number(userId));
+      setRecomendacoes(recomendacoesData.recomendacoes);
+    } catch (error) {
+      console.error("Erro ao carregar recomendações do usuário:", error);
+      setRecomendacoesError(
+        "Não foi possível carregar as recomendações agora."
+      );
+    } finally {
+      setRecomendacoesLoading(false);
     }
   }, [userId]);
 
@@ -124,6 +150,74 @@ const PerfilDeUsuario = () => {
                   <FaEnvelope className="mr-2 text-base" />
                   {usuario?.email ?? "Email não informado"}
                 </p>
+
+                <hr className="my-6 border-[#595652]" />
+
+                {/* Professores recomendados a partir do histórico do usuário */}
+                <section className="pb-6" aria-live="polite">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                    <div className="flex items-center justify-center md:justify-start gap-2">
+                      <FaProjectDiagram className="text-[#222E50]" />
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        Professores recomendados
+                      </h3>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 text-center md:text-left mb-4">
+                    {isOwnerOfProfile
+                      ? "Sugeridos pelo grafo com base nas suas avaliações."
+                      : "Sugeridos pelo grafo com base nas avaliações deste usuário."}
+                  </p>
+
+                  {recomendacoesLoading ? (
+                    <div className="border border-dashed border-[#D8D8D8] rounded-lg p-4 bg-[#F8F8F8]">
+                      <p className="text-sm text-gray-600 text-center md:text-left">
+                        Carregando recomendações...
+                      </p>
+                    </div>
+                  ) : recomendacoesError ? (
+                    <div className="border border-yellow-200 rounded-lg p-4 bg-yellow-50">
+                      <p className="text-sm text-yellow-800 text-center md:text-left">
+                        {recomendacoesError}
+                      </p>
+                    </div>
+                  ) : recomendacoes.length ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {recomendacoes.map((recomendacao) => (
+                        <button
+                          key={recomendacao.nodeId}
+                          type="button"
+                          onClick={() => router.push(`/perfilDeProfessor?id=${recomendacao.professorId}`)}
+                          className="group text-left border border-[#D8D8D8] rounded-lg p-3 bg-[#F8F8F8] hover:bg-yellow-50 hover:border-yellow-300 transition focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                        >
+                          <span className="block text-sm font-semibold text-[#222E50]">
+                            {recomendacao.nome}
+                          </span>
+                          <span className="block text-xs text-gray-600 mt-1">
+                            Pontuação {recomendacao.score.toFixed(1)}
+                          </span>
+                          <span className="block text-xs text-gray-500 mt-2">
+                            Parecido com {recomendacao.baseadoEm
+                              .map((origem) => origem.nome)
+                              .join(", ")}
+                          </span>
+                          <span className="block text-xs font-semibold text-[#222E50] mt-3 group-hover:underline">
+                            Ver perfil
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="border border-dashed border-[#D8D8D8] rounded-lg p-4 bg-[#F8F8F8]">
+                      <p className="text-sm font-medium text-gray-700 text-center md:text-left">
+                        Nenhuma recomendação ainda.
+                      </p>
+                      <p className="text-xs text-gray-500 text-center md:text-left mt-1">
+                        As sugestões aparecem depois de avaliar professores ligados a outros por matéria ou departamento.
+                      </p>
+                    </div>
+                  )}
+                </section>
 
                 <hr className="my-6 border-[#595652]" />
 

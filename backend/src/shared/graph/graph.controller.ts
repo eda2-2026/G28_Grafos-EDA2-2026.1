@@ -34,6 +34,24 @@ export class GraphController {
     };
   }
 
+  @Get('usuarios/:id/recomendacoes')
+  async getUserRecommendations(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() query: ProfessorRecommendationQueryDto,
+  ) {
+    const recomendacoes =
+      await this.graphRecommendationService.recommendForUser(id, {
+        limit: query.limit ?? 6,
+        maxDepth: query.maxDepth ?? 1,
+      });
+
+    return {
+      userId: id,
+      total: recomendacoes.length,
+      recomendacoes,
+    };
+  }
+
   @Get('professores/:id/rede')
   async getProfessorNetwork(
     @Param('id', ParseIntPipe) id: number,
