@@ -62,18 +62,32 @@ const PerfilDeProfessor = () => {
   const [avaliacoes, setAvaliacoes] = useState<any[]>([]);
   const [redeProfessor, setRedeProfessor] = useState<ProfessorNetwork | null>(null);
   const [loading, setLoading] = useState(true);
+  const [redeLoading, setRedeLoading] = useState(false);
+  const [redeError, setRedeError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    if (!profId) return;
+    if (!profId) {
+      setLoading(false);
+      return;
+    }
+
+    const professorId = Number(profId);
+    if (Number.isNaN(professorId)) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setRedeLoading(true);
+    setRedeError(null);
+    setRedeProfessor(null);
 
     try {
-      const [profData, avaliacoesData, redeData] = await Promise.all([
-        getOneProf(Number(profId)),
-        getAvaliacoesByProf(Number(profId)),
-        getProfessorNetwork(Number(profId)),
+      const [profData, avaliacoesData] = await Promise.all([
+        getOneProf(professorId),
+        getAvaliacoesByProf(professorId),
       ]);
       setProfessor(profData);
-      setRedeProfessor(redeData);
 
       const avaliacoesComUsuario = await Promise.all(
         avaliacoesData.map(async (avaliacao: any) => {
@@ -106,6 +120,16 @@ const PerfilDeProfessor = () => {
       console.error("Erro ao carregar dados do professor:", error);
     } finally {
       setLoading(false);
+    }
+
+    try {
+      const redeData = await getProfessorNetwork(professorId);
+      setRedeProfessor(redeData);
+    } catch (error) {
+      console.error("Erro ao carregar rede do professor:", error);
+      setRedeError("Não foi possível carregar a rede deste professor agora.");
+    } finally {
+      setRedeLoading(false);
     }
   }, [profId]);
 
@@ -171,22 +195,41 @@ const PerfilDeProfessor = () => {
 
                 <hr className="my-6 border-[#595652]" />
 
-                <section className="pb-6">
-                  <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
-                    <FaProjectDiagram className="text-[#222E50]" />
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      Rede de professores
-                    </h3>
+                <section className="pb-6" aria-live="polite">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                    <div className="flex items-center justify-center md:justify-start gap-2">
+                      <FaProjectDiagram className="text-[#222E50]" />
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        Rede de professores
+                      </h3>
+                    </div>
+                    {redeProfessor?.conexoesDiretas?.length ? (
+                      <span className="text-xs text-gray-500 text-center sm:text-right">
+                        {redeProfessor.conexoesDiretas.length} conexão(ões) no grafo
+                      </span>
+                    ) : null}
                   </div>
 
-                  {redeProfessor?.recomendacoes?.length ? (
+                  {redeLoading ? (
+                    <div className="border border-dashed border-[#D8D8D8] rounded-lg p-4 bg-[#F8F8F8]">
+                      <p className="text-sm text-gray-600 text-center md:text-left">
+                        Carregando rede de professores...
+                      </p>
+                    </div>
+                  ) : redeError ? (
+                    <div className="border border-yellow-200 rounded-lg p-4 bg-yellow-50">
+                      <p className="text-sm text-yellow-800 text-center md:text-left">
+                        {redeError}
+                      </p>
+                    </div>
+                  ) : redeProfessor?.recomendacoes?.length ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {redeProfessor.recomendacoes.map((recomendacao) => (
                         <button
                           key={recomendacao.nodeId}
                           type="button"
                           onClick={() => router.push(`/perfilDeProfessor?id=${recomendacao.professorId}`)}
-                          className="text-left border border-[#D8D8D8] rounded-lg p-3 bg-[#F8F8F8] hover:bg-yellow-50 hover:border-yellow-300 transition"
+                          className="group text-left border border-[#D8D8D8] rounded-lg p-3 bg-[#F8F8F8] hover:bg-yellow-50 hover:border-yellow-300 transition focus:outline-none focus:ring-2 focus:ring-yellow-300"
                         >
                           <span className="block text-sm font-semibold text-[#222E50]">
                             {recomendacao.nome}
@@ -198,13 +241,21 @@ const PerfilDeProfessor = () => {
                             {recomendacao.breakdown.sharedMatters} matéria(s) e{" "}
                             {recomendacao.breakdown.sharedDepartments} departamento(s) em comum
                           </span>
+                          <span className="block text-xs font-semibold text-[#222E50] mt-3 group-hover:underline">
+                            Ver perfil
+                          </span>
                         </button>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-600 text-center md:text-left">
-                      Nenhum professor relacionado encontrado.
-                    </p>
+                    <div className="border border-dashed border-[#D8D8D8] rounded-lg p-4 bg-[#F8F8F8]">
+                      <p className="text-sm font-medium text-gray-700 text-center md:text-left">
+                        Nenhum professor relacionado encontrado.
+                      </p>
+                      <p className="text-xs text-gray-500 text-center md:text-left mt-1">
+                        A rede aparece quando há professores conectados por matéria, departamento ou avaliações.
+                      </p>
+                    </div>
                   )}
                 </section>
 
