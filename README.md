@@ -140,6 +140,18 @@ Também foram tratados estados de interface:
 - ausência de professores relacionados;
 - foco e navegação visual nos cards de recomendação.
 
+### Telas com a Implementação
+
+As imagens abaixo mostram as interface desta entrega: 
+
+O perfil do professor exibe a seção **Rede de professores**, com as recomendações calculadas a partir do grafo (pontuação do ranking, matérias e departamentos em comum):
+
+![Perfil de professor](assets/perfilProf.png)
+
+O perfil do usuário reúne as avaliações e a navegação acadêmica que alimentam as relações usadas na montagem do grafo:
+
+![Perfil de usuário](assets/perfil.png)
+
 ## Endpoints de Grafos
 
 Foram criados endpoints específicos para consultar as recomendações e a rede de um professor.
